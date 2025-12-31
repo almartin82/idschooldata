@@ -1,0 +1,26 @@
+url: https://almartin82.github.io/idschooldata/
+
+template:
+  bootstrap: 5
+
+home:
+  links:
+  - text: "Part of the 50 State Schooldata Family"
+    href: https://github.com/almartin82/njschooldata
+
+reference:
+- title: Fetch Data
+  contents:
+  - fetch_enr
+  - fetch_enr_multi
+
+- title: Process & Tidy
+  contents:
+  - tidy_enr
+  - id_enr_aggs
+  - enr_grade_aggs
+
+- title: Cache Management
+  contents:
+  - cache_status
+  - starts_with("clear")
