@@ -1,5 +1,9 @@
 url: https://almartin82.github.io/idschooldata/
 
+authors:
+  Andy Martin:
+    href: https://github.com/almartin82
+
 template:
   bootstrap: 5
 
