@@ -14,6 +14,8 @@ reference:
   - fetch_enr
   - fetch_enr_multi
   - get_available_years
+  - get_data_availability
+  - print_data_availability
 
 - title: Process & Tidy
   contents:
