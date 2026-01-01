@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R:
     person("Al", "Martin", , "almartin@example.com", role = c("aut", "cre"))
 Description: A simple, consistent interface for accessing Idaho
-    school data in R.
+    school data in Python and R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
