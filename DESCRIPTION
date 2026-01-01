@@ -1,12 +1,10 @@
 Package: idschooldata
-Title: Fetch and Process Idaho School Data
+Title: Idaho School Data
 Version: 0.1.0
 Authors@R:
     person("Al", "Martin", , "almartin@example.com", role = c("aut", "cre"))
-Description: Downloads and processes school data from the Idaho State Department
-    of Education (SDE). Provides functions for fetching enrollment data from the
-    SDE's public finance portal and transforming it into tidy format for analysis.
-    Supports historical enrollment data by district, charter school, and building.
+Description: A simple, consistent interface for accessing Idaho
+    school data in R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
