@@ -4,8 +4,8 @@
 **[Getting
 Started](https://almartin82.github.io/idschooldata/articles/quickstart.html)**
 
-Fetch and analyze Idaho public school enrollment data from the Idaho
-State Department of Education.
+Fetch and analyze Idaho school enrollment data from the Idaho State
+Department of Education in R or Python.
 
 ## What can you find with idschooldata?
 
@@ -198,6 +198,8 @@ remotes::install_github("almartin82/idschooldata")
 
 ## Quick start
 
+### R
+
 ``` r
 library(idschooldata)
 library(dplyr)
@@ -226,6 +228,36 @@ enr_2025 %>%
          subgroup %in% c("white", "hispanic", "asian")) %>%
   group_by(district_name, subgroup) %>%
   summarize(n = sum(n_students, na.rm = TRUE))
+```
+
+### Python
+
+``` python
+import pyidschooldata as id_
+
+# Check available years
+years = id_.get_available_years()
+print(f"Data available from {years['min_year']} to {years['max_year']}")
+
+# Fetch one year
+enr_2025 = id_.fetch_enr(2025)
+
+# Fetch multiple years
+enr_recent = id_.fetch_enr_multi([2020, 2021, 2022, 2023, 2024, 2025])
+
+# State totals
+state_total = enr_2025[
+    (enr_2025['is_state'] == True) &
+    (enr_2025['subgroup'] == 'total_enrollment') &
+    (enr_2025['grade_level'] == 'TOTAL')
+]
+
+# District breakdown
+districts = enr_2025[
+    (enr_2025['is_district'] == True) &
+    (enr_2025['subgroup'] == 'total_enrollment') &
+    (enr_2025['grade_level'] == 'TOTAL')
+].sort_values('n_students', ascending=False)
 ```
 
 ## Data availability
