@@ -2,19 +2,7 @@
 # Utility Functions
 # ==============================================================================
 
-#' Pipe operator
-#'
-#' See \code{dplyr::\link[dplyr:reexports]{\%>\%}} for details.
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom dplyr %>%
-#' @usage lhs \%>\% rhs
-#' @param lhs A value or the magrittr placeholder.
-#' @param rhs A function call using the magrittr semantics.
-#' @return The result of calling `rhs(lhs)`.
+#' @importFrom rlang .data
 NULL
 
 
@@ -90,4 +78,27 @@ standardize_district_id <- function(x) {
 #' @keywords internal
 get_year_label <- function(end_year) {
   paste0(end_year - 1, "-", substr(as.character(end_year), 3, 4))
+}
+
+
+#' Get available years for Idaho enrollment data
+#'
+#' Returns the range of years for which enrollment data can be fetched
+#' from the Idaho State Department of Education.
+#'
+#' @return A list with components:
+#'   \describe{
+#'     \item{min_year}{Earliest available year (2002)}
+#'     \item{max_year}{Most recent available year (2025)}
+#'     \item{description}{Human-readable description of the date range}
+#'   }
+#' @export
+#' @examples
+#' get_available_years()
+get_available_years <- function() {
+  list(
+    min_year = 2002,
+    max_year = 2025,
+    description = "Idaho enrollment data is available from 2002 to 2025"
+  )
 }
