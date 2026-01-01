@@ -9,4 +9,4 @@ src/*.dll
 /Meta/
 vignettes/*_cache/
 vignettes/*_files/
-..Rcheck/
+*.Rcheck/
