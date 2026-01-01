@@ -24,4 +24,4 @@ reference:
 - title: Cache Management
   contents:
   - cache_status
-  - starts_with("clear")
+  - clear_cache
