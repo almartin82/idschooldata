@@ -5,17 +5,18 @@
 # This file contains functions for downloading raw enrollment data from
 # Idaho State Department of Education (SDE).
 #
-# Data sources:
-# - Historical Enrollment Summary: District/Charter totals by year (2002-2025)
-# - Historical Enrollment by District: Detailed enrollment with grades (2011-2025)
-# - Enrollment by Building: Current year building-level data
+# Data sources (updated December 2025):
+# - Historical Enrollment by District/Charter: Multi-year data with grades
+#   URL: https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-District-or-Charter.xlsx
+# - Historical Enrollment by Building: Building-level data
+#   URL: https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-Building-1.xlsx
+# - Current Enrollment by District/Charter: Latest year only
+#   URL: https://www.sde.idaho.gov/wp-content/uploads/2025/12/Enrollment-by-District-and-Charter-School.xlsx
 #
-# File locations on SDE website:
-# - https://www.sde.idaho.gov/finance/files/attendance-enrollment/historical/
-# - https://www.sde.idaho.gov/finance/files/attendance-enrollment/enrollment/
-#
-# Note: Historical data before 2011 has limited demographic breakdowns.
-# Race/ethnicity data is only reliably available from 2011 onward.
+# Note: The file structure uses:
+# - 4 header rows to skip
+# - Year column in format "2025-2026" (full years with dash)
+# - Grade columns: Preschool, garten (Kindergarten), 1st-12th
 #
 # ==============================================================================
 
@@ -30,9 +31,10 @@
 #' @keywords internal
 get_raw_enr <- function(end_year) {
 
-  # Validate year - data available from 2002 onwards in historical file
-  if (end_year < 2002 || end_year > 2025) {
-    stop("end_year must be between 2002 and 2025")
+  # Validate year - data available from 1996 onwards in historical file
+  # File contains data from 1995-1996 through 2025-2026
+  if (end_year < 1996 || end_year > 2026) {
+    stop("end_year must be between 1996 and 2026")
   }
 
   message(paste("Downloading Idaho SDE enrollment data for", end_year, "..."))
@@ -65,7 +67,7 @@ get_raw_enr <- function(end_year) {
 #'
 #' Downloads the comprehensive historical enrollment file from Idaho SDE.
 #' This file contains enrollment data for all districts and charter schools
-#' across multiple years.
+#' across multiple years (1995-1996 through 2025-2026).
 #'
 #' @return List with district and building data frames
 #' @keywords internal
@@ -73,59 +75,80 @@ download_historical_enrollment <- function() {
 
   message("  Downloading historical enrollment data...")
 
-  # Primary URL for historical enrollment by district/charter
-  # This file contains year-by-year enrollment for all districts
-  primary_url <- "https://www.sde.idaho.gov/finance/files/attendance-enrollment/historical/Historical-Enrollment-by-District-or-Charter.xlsx"
-
-  # Alternative URL structure (in case primary fails)
-  alt_url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/07/Historical-Enrollment-by-District-or-Charter.xlsx"
+  # Primary URL for historical enrollment by district/charter (updated Dec 2025)
+  # This file contains year-by-year enrollment for all districts with grade breakdowns
+  primary_url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-District-or-Charter.xlsx"
 
   # Download to temp file
+
   tname <- tempfile(
     pattern = "id_historical_enr_",
     tmpdir = tempdir(),
     fileext = ".xlsx"
   )
 
-  # Try primary URL first, then alternative
   download_success <- FALSE
 
-  for (url in c(primary_url, alt_url)) {
-    tryCatch({
-      response <- httr::GET(
-        url,
-        httr::write_disk(tname, overwrite = TRUE),
-        httr::timeout(120)
-      )
+  tryCatch({
+    response <- httr::GET(
+      primary_url,
+      httr::write_disk(tname, overwrite = TRUE),
+      httr::timeout(120)
+    )
 
-      if (!httr::http_error(response)) {
-        # Verify it's a valid Excel file
-        file_info <- file.info(tname)
-        if (file_info$size > 1000) {
-          download_success <- TRUE
-          break
-        }
+    if (!httr::http_error(response)) {
+      # Verify it's a valid Excel file (should be ~500KB+)
+      file_info <- file.info(tname)
+      if (file_info$size > 100000) {
+        download_success <- TRUE
       }
-    }, error = function(e) {
-      message(paste("    Failed to download from:", url))
-    })
-  }
+    }
+  }, error = function(e) {
+    message(paste("    Failed to download from:", primary_url))
+  })
 
   if (!download_success) {
-    stop("Failed to download Idaho historical enrollment data from SDE website")
+    stop("Failed to download Idaho historical enrollment data from SDE website. ",
+         "URL may have changed. Check: https://www.sde.idaho.gov/finance/")
   }
 
-  # Read the Excel file
-  # The historical file typically has enrollment across columns by year
+  # Read the Excel file, skipping header rows
+  # File structure: 4 header rows, then data
+  # Columns: #, School District or Charter School, Year, Membership, Preschool, garten, 1st-12th
+  # Note: This file uses "fill-down" format where district name/ID only appears on first row
   district_df <- tryCatch({
     readxl::read_excel(
       tname,
       sheet = 1,
+      skip = 4,
       col_types = "text"
     )
   }, error = function(e) {
     stop(paste("Failed to parse Excel file:", e$message))
   })
+
+  # Standardize column names
+  names(district_df) <- c(
+    "district_id", "district_name", "year", "membership",
+    "preschool", "kindergarten", "grade_1", "grade_2", "grade_3", "grade_4",
+    "grade_5", "grade_6", "grade_7", "grade_8", "grade_9", "grade_10",
+    "grade_11", "grade_12"
+  )[1:ncol(district_df)]
+
+  # Fill down district_id and district_name (Excel format has these only on first row per entity)
+  # Use tidyr::fill or manual fill
+  last_id <- NA_character_
+  last_name <- NA_character_
+  for (i in seq_len(nrow(district_df))) {
+    if (!is.na(district_df$district_name[i]) && district_df$district_name[i] != "") {
+      last_id <- district_df$district_id[i]
+      last_name <- district_df$district_name[i]
+    } else if (!is.na(district_df$year[i])) {
+      # Only fill if we have year data (skip blank separator rows)
+      district_df$district_id[i] <- last_id
+      district_df$district_name[i] <- last_name
+    }
+  }
 
   # Try to get building-level data from a separate file if available
   building_df <- download_building_enrollment()
@@ -142,14 +165,15 @@ download_historical_enrollment <- function() {
 
 #' Download building-level enrollment data
 #'
+#' Downloads the historical building-level enrollment file from Idaho SDE.
+#' This is a large file (~6MB) with enrollment by building across years.
+#'
 #' @return Data frame with building enrollment or empty data frame if unavailable
 #' @keywords internal
 download_building_enrollment <- function() {
 
-  # Building-level data URL
-  building_url <- "https://www.sde.idaho.gov/finance/files/attendance-enrollment/historical/Historical-Enrollment-by-Building-for-District-and-Charter-School.xlsx"
-
-  alt_url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/07/Historical-Enrollment-by-Building.xlsx"
+  # Building-level data URL (updated Dec 2025)
+  building_url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-Building-1.xlsx"
 
   tname <- tempfile(
     pattern = "id_building_enr_",
@@ -157,26 +181,26 @@ download_building_enrollment <- function() {
     fileext = ".xlsx"
   )
 
-  for (url in c(building_url, alt_url)) {
-    tryCatch({
-      response <- httr::GET(
-        url,
-        httr::write_disk(tname, overwrite = TRUE),
-        httr::timeout(120)
-      )
+  tryCatch({
+    response <- httr::GET(
+      building_url,
+      httr::write_disk(tname, overwrite = TRUE),
+      httr::timeout(180)  # Longer timeout for large file
+    )
 
-      if (!httr::http_error(response)) {
-        file_info <- file.info(tname)
-        if (file_info$size > 1000) {
-          df <- readxl::read_excel(tname, sheet = 1, col_types = "text")
-          unlink(tname)
-          return(df)
-        }
+    if (!httr::http_error(response)) {
+      file_info <- file.info(tname)
+      # Building file is ~6MB
+      if (file_info$size > 100000) {
+        # Skip header row in building file
+        df <- readxl::read_excel(tname, sheet = 1, skip = 1, col_types = "text")
+        unlink(tname)
+        return(df)
       }
-    }, error = function(e) {
-      # Silently continue to next URL
-    })
-  }
+    }
+  }, error = function(e) {
+    message("  Note: Building-level data not available")
+  })
 
   unlink(tname)
 
@@ -187,8 +211,8 @@ download_building_enrollment <- function() {
 
 #' Filter historical data to a specific year
 #'
-#' The historical enrollment file has years as columns. This function
-#' identifies the correct year column and filters/pivots as needed.
+#' The historical enrollment file has data in long format with a Year column.
+#' Year format is "2024-2025" (start year - end year with dash).
 #'
 #' @param df Data frame from historical file
 #' @param end_year The school year end to filter to
@@ -202,61 +226,39 @@ filter_year_data <- function(df, end_year) {
 
   cols <- names(df)
 
-  # Idaho historical file typically uses format like "2023-24" or "2024" for year columns
-  # or may have a "Year" column with the data in long format
-  year_label <- get_year_label(end_year)  # e.g., "2023-24"
-  year_short <- as.character(end_year)    # e.g., "2024"
-  year_prev <- as.character(end_year - 1) # e.g., "2023"
+  # Idaho file uses year format "2024-2025" (full years with dash)
+  # end_year 2025 corresponds to "2024-2025" school year
+  year_full <- paste0(end_year - 1, "-", end_year)  # e.g., "2024-2025"
 
-  # Check if data is in wide format (years as columns)
-  year_cols <- grep(paste0(year_label, "|^", year_short, "$|^", year_prev, "-"), cols, value = TRUE)
-
-  if (length(year_cols) > 0) {
-    # Wide format - need to select the enrollment column for this year
-    # Identify ID columns (district name, ID, etc.)
-    id_patterns <- c("district", "name", "id", "code", "lea", "charter")
-    id_cols <- cols[grepl(paste(id_patterns, collapse = "|"), cols, ignore.case = TRUE)]
-
-    # Keep ID columns and the year column
-    keep_cols <- unique(c(id_cols, year_cols))
-    keep_cols <- keep_cols[keep_cols %in% cols]
-
-    if (length(keep_cols) > 0) {
-      result <- df[, keep_cols, drop = FALSE]
-      # Rename the year column to "enrollment" for consistency
-      if (length(year_cols) == 1) {
-        names(result)[names(result) == year_cols[1]] <- "enrollment"
-      }
-      return(result)
-    }
-  }
-
-  # Check if data is in long format with a Year column
-  year_col <- grep("^year$|^school.?year$|^fiscal.?year$", cols, value = TRUE, ignore.case = TRUE)
+  # Check for year column
+  year_col <- grep("^year$|^school.?year$", cols, value = TRUE, ignore.case = TRUE)
 
   if (length(year_col) > 0) {
     year_col <- year_col[1]
-    # Filter to matching year
     year_values <- df[[year_col]]
 
-    # Match various year formats
-    year_match <- year_values == year_label |
-                  year_values == year_short |
-                  grepl(paste0("^", year_prev, ".*", substr(year_short, 3, 4)), year_values)
+    # Match the full year format
+    year_match <- year_values == year_full
 
     result <- df[year_match, , drop = FALSE]
+
+    # Remove rows with no data (blank district names)
+    if ("district_name" %in% names(result)) {
+      result <- result[!is.na(result$district_name) & result$district_name != "", ]
+    }
+
     return(result)
   }
 
-  # If no year structure detected, return empty
-  warning(paste("Could not identify year structure in data for year", end_year))
+  # If no year column found, try to identify it from available columns
+  warning(paste("Could not identify year column in data for year", end_year))
   data.frame()
 }
 
 
 #' Download current year enrollment by district
 #'
-#' Downloads the current enrollment file which has more detailed breakdowns.
+#' Downloads the current enrollment file which has only the latest year.
 #'
 #' @return Data frame with current enrollment data
 #' @keywords internal
@@ -264,7 +266,7 @@ download_current_enrollment <- function() {
 
   message("  Downloading current enrollment data...")
 
-  url <- "https://www.sde.idaho.gov/finance/files/attendance-enrollment/enrollment/Enrollment-by-District-and-Charter.xlsx"
+  url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/12/Enrollment-by-District-and-Charter-School.xlsx"
 
   tname <- tempfile(
     pattern = "id_current_enr_",
@@ -283,7 +285,8 @@ download_current_enrollment <- function() {
       stop(paste("HTTP error:", httr::status_code(response)))
     }
 
-    df <- readxl::read_excel(tname, sheet = 1, col_types = "text")
+    # Skip header rows
+    df <- readxl::read_excel(tname, sheet = 1, skip = 4, col_types = "text")
     unlink(tname)
     return(df)
 
@@ -297,6 +300,9 @@ download_current_enrollment <- function() {
 
 #' Download enrollment by grade level
 #'
+#' Note: Grade-level data is included in the main historical file,
+#' so this function uses that file filtered to the requested year.
+#'
 #' @param end_year School year end
 #' @return Data frame with grade-level enrollment
 #' @keywords internal
@@ -304,10 +310,8 @@ download_grade_enrollment <- function(end_year) {
 
   message("  Downloading grade-level enrollment data...")
 
-  # Historical grade-level data
-  url <- "https://www.sde.idaho.gov/finance/files/attendance-enrollment/historical/Historical-Statewide-Enrollment-by-Grade.xlsx"
-
-  alt_url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/07/Historical-Enrollment-by-District-or-Charter-by-Grade.xlsx"
+  # Grade data is in the statewide by grade file
+  url <- "https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-State-Enrollment-by-Grade.xlsx"
 
   tname <- tempfile(
     pattern = "id_grade_enr_",
@@ -315,38 +319,25 @@ download_grade_enrollment <- function(end_year) {
     fileext = ".xlsx"
   )
 
-  for (url in c(url, alt_url)) {
-    tryCatch({
-      response <- httr::GET(
-        url,
-        httr::write_disk(tname, overwrite = TRUE),
-        httr::timeout(120)
-      )
+  tryCatch({
+    response <- httr::GET(
+      url,
+      httr::write_disk(tname, overwrite = TRUE),
+      httr::timeout(180)
+    )
 
-      if (!httr::http_error(response)) {
-        file_info <- file.info(tname)
-        if (file_info$size > 1000) {
-          df <- readxl::read_excel(tname, sheet = 1, col_types = "text")
-          unlink(tname)
-          return(filter_year_data(df, end_year))
-        }
+    if (!httr::http_error(response)) {
+      file_info <- file.info(tname)
+      if (file_info$size > 100000) {
+        df <- readxl::read_excel(tname, sheet = 1, skip = 1, col_types = "text")
+        unlink(tname)
+        return(filter_year_data(df, end_year))
       }
-    }, error = function(e) {
-      # Continue to next URL
-    })
-  }
+    }
+  }, error = function(e) {
+    message("  Note: Grade-level data not available separately")
+  })
 
   unlink(tname)
   data.frame()
-}
-
-
-#' Get available years from Idaho SDE data
-#'
-#' @return Vector of available school year ends
-#' @keywords internal
-get_available_years <- function() {
-  # Based on research, Idaho SDE historical data goes back to approximately 2002
-  # with more complete data from 2011 onward
-  2002:2025
 }

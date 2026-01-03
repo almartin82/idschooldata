@@ -60,6 +60,7 @@ Idaho enrollment data has evolved over time:
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://almartin82.github.io/idschooldata}
   \item \url{https://github.com/almartin82/idschooldata}
   \item Report bugs at \url{https://github.com/almartin82/idschooldata/issues}
 }

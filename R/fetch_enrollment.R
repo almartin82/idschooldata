@@ -40,14 +40,13 @@
 #' }
 fetch_enr <- function(end_year, tidy = TRUE, use_cache = TRUE) {
 
-  # Validate year - Idaho historical data available from 2002
-  # Demographic data only reliable from 2011 onward
-  if (end_year < 2002 || end_year > 2025) {
-    stop("end_year must be between 2002 and 2025")
+  # Validate year - Idaho historical data available from 1996 (1995-96 SY) to 2026 (2025-26 SY)
+  if (end_year < 1996 || end_year > 2026) {
+    stop("end_year must be between 1996 and 2026")
   }
 
   if (end_year < 2011) {
-    message("Note: Demographic breakdowns (race/ethnicity) only available from 2011 onward")
+    message("Note: Older years have grade-level data but limited demographic breakdowns")
   }
 
   # Determine cache type based on tidy parameter
@@ -102,10 +101,10 @@ fetch_enr <- function(end_year, tidy = TRUE, use_cache = TRUE) {
 fetch_enr_multi <- function(end_years, tidy = TRUE, use_cache = TRUE) {
 
   # Validate years
-  invalid_years <- end_years[end_years < 2002 | end_years > 2025]
+  invalid_years <- end_years[end_years < 1996 | end_years > 2026]
   if (length(invalid_years) > 0) {
     stop(paste("Invalid years:", paste(invalid_years, collapse = ", "),
-               "\nend_year must be between 2002 and 2025"))
+               "\nend_year must be between 1996 and 2026"))
   }
 
   # Fetch each year
@@ -142,37 +141,36 @@ get_data_availability <- function() {
     agency_url = "https://www.sde.idaho.gov/",
 
     years = list(
-      enrollment_total = 2002:2025,
-      enrollment_demographic = 2011:2025,
-      enrollment_by_grade = 2011:2025,
-      enrollment_by_building = 2015:2025
+      enrollment_total = 1996:2026,
+      enrollment_by_grade = 1996:2026,
+      enrollment_by_building = 2011:2026
     ),
 
     data_eras = list(
       era1 = list(
-        years = 2002:2010,
-        description = "Legacy format - total enrollment only",
+        years = 1996:2010,
+        description = "Historical format - enrollment by grade",
         demographics = FALSE,
-        by_grade = FALSE,
-        notes = "Limited to district/charter totals"
+        by_grade = TRUE,
+        notes = "Grade-level enrollment available, limited demographics"
       ),
       era2 = list(
-        years = 2011:2024,
-        description = "Current format with demographics",
-        demographics = TRUE,
+        years = 2011:2026,
+        description = "Current format with grade and building detail",
+        demographics = FALSE,
         by_grade = TRUE,
-        notes = "Full demographic and grade breakdowns available"
+        notes = "Grade-level and building-level data available"
       )
     ),
 
     demographics_available = c(
-      "white", "black", "hispanic", "asian",
-      "native_american", "pacific_islander", "multiracial"
+      "Note: Race/ethnicity data not included in main enrollment file.",
+      "Available through Idaho Report Card: https://idahoreportcard.org/"
     ),
 
     special_populations = c(
       "Note: ELL, Special Ed, and Free/Reduced Lunch data available through",
-      "separate SDE reporting systems, not included in main enrollment files"
+      "Idaho Report Card or separate SDE reporting systems"
     ),
 
     geographic = list(
@@ -185,13 +183,14 @@ get_data_availability <- function() {
       "Enrollment counts are as of first Friday in November (official count date)",
       "Students dual-enrolled are counted once per school, once per district",
       "Private and homeschool students are excluded",
-      "Small cell sizes (<10) may be suppressed for privacy"
+      "Data goes back to 1995-96 school year (end_year = 1996)"
     ),
 
     data_sources = c(
-      "Historical Enrollment: https://www.sde.idaho.gov/finance/files/attendance-enrollment/historical/",
-      "Current Enrollment: https://www.sde.idaho.gov/finance/files/attendance-enrollment/enrollment/",
-      "Idaho Ed Trends: https://www.idahoedtrends.org/data"
+      "Historical Enrollment: https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-District-or-Charter.xlsx",
+      "Building Enrollment: https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-Building-1.xlsx",
+      "Finance Portal: https://www.sde.idaho.gov/finance/",
+      "Idaho Report Card: https://idahoreportcard.org/"
     )
   )
 }
