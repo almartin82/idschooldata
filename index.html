@@ -71,9 +71,6 @@
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>growth <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="reference/figures/enrollment-growth.png" alt="Idaho growth"><div class="figcaption">Idaho growth</div>
-</div>
 <hr>
 </div>
 <div class="section level3">
@@ -99,9 +96,6 @@
 <code class="sourceCode R"><span><span class="va">enr</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"hispanic"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span>, <span class="va">pct</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="reference/figures/hispanic-growth.png" alt="Hispanic growth"><div class="figcaption">Hispanic growth</div>
-</div>
 <p>Twin Falls and Caldwell school districts are now over 40% Hispanic.</p>
 <hr>
 </div>
@@ -125,9 +119,6 @@
 <code class="sourceCode R"><span><span class="va">enr</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"K"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="reference/figures/kindergarten.png" alt="Kindergarten trend"><div class="figcaption">Kindergarten trend</div>
-</div>
 <hr>
 </div>
 <div class="section level3">
@@ -176,9 +167,6 @@
 <span>         <span class="va">is_district</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">district_name</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
-<div class="float">
-<img src="reference/figures/treasure-valley.png" alt="Treasure Valley growth"><div class="figcaption">Treasure Valley growth</div>
-</div>
 <hr>
 </div>
 <div class="section level3">
