@@ -41,7 +41,7 @@ process_enr <- function(raw_data, end_year) {
 
 #' Process district-level enrollment data
 #'
-#' @param df Raw district data frame
+#' @param df Raw district data frame (already has standardized column names from download)
 #' @param end_year School year end
 #' @return Processed district data frame
 #' @keywords internal
@@ -54,15 +54,6 @@ process_district_enr <- function(df, end_year) {
   cols <- names(df)
   n_rows <- nrow(df)
 
-  # Helper to find column by pattern (case-insensitive)
-  find_col <- function(patterns) {
-    for (pattern in patterns) {
-      matched <- grep(pattern, cols, value = TRUE, ignore.case = TRUE)
-      if (length(matched) > 0) return(matched[1])
-    }
-    NULL
-  }
-
   # Build result dataframe
   result <- data.frame(
     end_year = rep(end_year, n_rows),
@@ -70,12 +61,10 @@ process_district_enr <- function(df, end_year) {
     stringsAsFactors = FALSE
   )
 
-  # District ID - Idaho uses various naming conventions
-  district_id_col <- find_col(c("^district.?id$", "^lea.?id$", "^dist.?code$", "^district.?number$", "^dist.?id$"))
-  if (!is.null(district_id_col)) {
-    result$district_id <- standardize_district_id(df[[district_id_col]])
+  # District ID (already standardized in download)
+  if ("district_id" %in% cols) {
+    result$district_id <- standardize_district_id(df$district_id)
   } else {
-    # Try to extract from name if ID column not found
     result$district_id <- NA_character_
   }
 
@@ -83,118 +72,59 @@ process_district_enr <- function(df, end_year) {
   result$campus_id <- rep(NA_character_, n_rows)
 
   # District name
-  district_name_col <- find_col(c("^district.?name$", "^lea.?name$", "^district$", "^name$"))
-  if (!is.null(district_name_col)) {
-    result$district_name <- clean_name(df[[district_name_col]])
+  if ("district_name" %in% cols) {
+    result$district_name <- clean_name(df$district_name)
   } else {
     result$district_name <- NA_character_
   }
 
   result$campus_name <- rep(NA_character_, n_rows)
 
-  # Charter flag - Idaho distinguishes charters from traditional districts
-  charter_col <- find_col(c("charter", "type", "lea.?type"))
-  if (!is.null(charter_col)) {
-    charter_values <- tolower(df[[charter_col]])
-    result$charter_flag <- ifelse(
-      grepl("charter", charter_values) | charter_values == "c" | charter_values == "y",
-      "Y", "N"
-    )
+  # Charter flag - infer from name
+  result$charter_flag <- ifelse(
+    grepl("charter", result$district_name, ignore.case = TRUE),
+    "Y", "N"
+  )
+
+  # Total enrollment - use "membership" column from historical file
+  if ("membership" %in% cols) {
+    result$row_total <- safe_numeric(df$membership)
   } else {
-    # Infer from name if column not found
-    result$charter_flag <- ifelse(
-      grepl("charter", result$district_name, ignore.case = TRUE),
-      "Y", "N"
-    )
+    result$row_total <- NA_real_
   }
 
-  # Total enrollment
-  total_col <- find_col(c("^enrollment$", "^total$", "^total.?enrollment$", "^count$", paste0("^", end_year - 1, "-")))
-  if (!is.null(total_col)) {
-    result$row_total <- safe_numeric(df[[total_col]])
-  } else {
-    # Look for year-specific column
-    year_label <- get_year_label(end_year)
-    year_col <- find_col(c(paste0("^", year_label), paste0("^", end_year)))
-    if (!is.null(year_col)) {
-      result$row_total <- safe_numeric(df[[year_col]])
-    } else {
-      result$row_total <- NA_real_
-    }
-  }
-
-  # Demographics - may not be available in all years
-  # Idaho tracks: White, Black/African American, Hispanic/Latino, Asian,
-  # American Indian/Alaska Native, Native Hawaiian/Pacific Islander, Two or More Races
-  demo_map <- list(
-    white = c("white", "caucasian"),
-    black = c("black", "african.?american"),
-    hispanic = c("hispanic", "latino", "latinx"),
-    asian = c("^asian$", "asian.?alone"),
-    pacific_islander = c("pacific", "hawaiian", "nhpi"),
-    native_american = c("indian", "native.?american", "alaska", "aian"),
-    multiracial = c("two.?or.?more", "multiracial", "multi.?race", "two.?races")
+  # Grade levels - using standardized column names from download
+  grade_cols <- list(
+    grade_pk = "preschool",
+    grade_k = "kindergarten",
+    grade_01 = "grade_1",
+    grade_02 = "grade_2",
+    grade_03 = "grade_3",
+    grade_04 = "grade_4",
+    grade_05 = "grade_5",
+    grade_06 = "grade_6",
+    grade_07 = "grade_7",
+    grade_08 = "grade_8",
+    grade_09 = "grade_9",
+    grade_10 = "grade_10",
+    grade_11 = "grade_11",
+    grade_12 = "grade_12"
   )
 
-  for (name in names(demo_map)) {
-    col <- find_col(demo_map[[name]])
-    if (!is.null(col)) {
+  for (name in names(grade_cols)) {
+    col <- grade_cols[[name]]
+    if (col %in% cols) {
       result[[name]] <- safe_numeric(df[[col]])
     }
   }
 
-  # Special populations
-  special_map <- list(
-    econ_disadv = c("free.?reduced", "frl", "economically", "low.?income"),
-    lep = c("lep", "ell", "english.?learner", "limited.?english"),
-    special_ed = c("special.?ed", "iep", "sped", "disability")
-  )
-
-  for (name in names(special_map)) {
-    col <- find_col(special_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
-
-  # Gender
-  male_col <- find_col(c("^male$", "^males$", "^m$"))
-  if (!is.null(male_col)) {
-    result$male <- safe_numeric(df[[male_col]])
-  }
-
-  female_col <- find_col(c("^female$", "^females$", "^f$"))
-  if (!is.null(female_col)) {
-    result$female <- safe_numeric(df[[female_col]])
-  }
-
-  # Grade levels - Idaho uses PK, K, 01-12
-  grade_map <- list(
-    grade_pk = c("^pk$", "^pre.?k", "^prek$", "^prekindergarten$"),
-    grade_k = c("^k$", "^kg$", "^kindergarten$"),
-    grade_01 = c("^01$", "^1$", "^grade.?1$", "^first$"),
-    grade_02 = c("^02$", "^2$", "^grade.?2$", "^second$"),
-    grade_03 = c("^03$", "^3$", "^grade.?3$", "^third$"),
-    grade_04 = c("^04$", "^4$", "^grade.?4$", "^fourth$"),
-    grade_05 = c("^05$", "^5$", "^grade.?5$", "^fifth$"),
-    grade_06 = c("^06$", "^6$", "^grade.?6$", "^sixth$"),
-    grade_07 = c("^07$", "^7$", "^grade.?7$", "^seventh$"),
-    grade_08 = c("^08$", "^8$", "^grade.?8$", "^eighth$"),
-    grade_09 = c("^09$", "^9$", "^grade.?9$", "^ninth$"),
-    grade_10 = c("^10$", "^grade.?10$", "^tenth$"),
-    grade_11 = c("^11$", "^grade.?11$", "^eleventh$"),
-    grade_12 = c("^12$", "^grade.?12$", "^twelfth$")
-  )
-
-  for (name in names(grade_map)) {
-    col <- find_col(grade_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
-
-  # Filter out rows with no valid data
-  result <- result[!is.na(result$row_total) | !is.na(result$district_name), ]
+  # Filter out rows with no valid data (remove state total and empty rows)
+  # Keep rows that have either a valid total or a district name (but not state totals)
+  result <- result[
+    !is.na(result$district_name) &
+    result$district_name != "" &
+    !grepl("STATE OF IDAHO", result$district_name, ignore.case = TRUE),
+  ]
 
   result
 }

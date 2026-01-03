@@ -86,10 +86,13 @@ get_year_label <- function(end_year) {
 #' Returns the range of years for which enrollment data can be fetched
 #' from the Idaho State Department of Education.
 #'
+#' The historical file contains data from 1995-1996 through 2025-2026 school years.
+#' For practicality, we expose 1996-2026 (using end_year convention).
+#'
 #' @return A list with components:
 #'   \describe{
-#'     \item{min_year}{Earliest available year (2002)}
-#'     \item{max_year}{Most recent available year (2024)}
+#'     \item{min_year}{Earliest available year (1996)}
+#'     \item{max_year}{Most recent available year (2026)}
 #'     \item{description}{Human-readable description of the date range}
 #'   }
 #' @export
@@ -97,8 +100,8 @@ get_year_label <- function(end_year) {
 #' get_available_years()
 get_available_years <- function() {
   list(
-    min_year = 2002,
-    max_year = 2024,
-    description = "Idaho enrollment data is available from 2002 to 2024"
+    min_year = 1996,
+    max_year = 2026,
+    description = "Idaho enrollment data is available from 1996 (1995-96 SY) to 2026 (2025-26 SY)"
   )
 }
