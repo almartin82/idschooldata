@@ -16,6 +16,10 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/enrollment-trends.html">Idaho Enrollment Trends</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/almartin82/idschooldata/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -46,6 +50,41 @@
 <li>Keep commit messages focused on what changed, not how it was written</li>
 </ul><hr></div>
 <div class="section level2">
+<h2 id="local-testing-before-prs-required">Local Testing Before PRs (REQUIRED)<a class="anchor" aria-label="anchor" href="#local-testing-before-prs-required"></a></h2>
+<p><strong>PRs will not be merged until CI passes.</strong> Run these checks locally BEFORE opening a PR:</p>
+<div class="section level3">
+<h3 id="ci-checks-that-must-pass">CI Checks That Must Pass<a class="anchor" aria-label="anchor" href="#ci-checks-that-must-pass"></a></h3>
+<table class="table"><colgroup><col width="18%"><col width="40%"><col width="40%"></colgroup><thead><tr class="header"><th>Check</th>
+<th>Local Command</th>
+<th>What It Tests</th>
+</tr></thead><tbody><tr class="odd"><td>R-CMD-check</td>
+<td><code>devtools::check()</code></td>
+<td>Package builds, tests pass, no errors/warnings</td>
+</tr><tr class="even"><td>Python tests</td>
+<td><code>pytest tests/test_pyidschooldata.py -v</code></td>
+<td>Python wrapper works correctly</td>
+</tr><tr class="odd"><td>pkgdown</td>
+<td><code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code></td>
+<td>Documentation and vignettes render</td>
+</tr></tbody></table></div>
+<div class="section level3">
+<h3 id="quick-commands">Quick Commands<a class="anchor" aria-label="anchor" href="#quick-commands"></a></h3>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># R package check (required)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Python tests (required)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/system.html" class="external-link">system</a></span><span class="op">(</span><span class="st">"pip install -e ./pyidschooldata &amp;&amp; pytest tests/test_pyidschooldata.py -v"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># pkgdown build (required)</span></span>
+<span><span class="fu">pkgdown</span><span class="fu">::</span><span class="fu"><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">build_site</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="pre-pr-checklist">Pre-PR Checklist<a class="anchor" aria-label="anchor" href="#pre-pr-checklist"></a></h3>
+<p>Before opening a PR, verify: - [ ] <code>devtools::check()</code> — 0 errors, 0 warnings - [ ] <code>pytest tests/test_pyidschooldata.py</code> — all tests pass - [ ] <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site()</a></code> — builds without errors - [ ] Vignettes render (no <code>eval=FALSE</code> hacks)</p>
+<hr></div>
+</div>
+<div class="section level2">
 <h2 id="live-pipeline-testing">LIVE Pipeline Testing<a class="anchor" aria-label="anchor" href="#live-pipeline-testing"></a></h2>
 <p>This package includes <code>tests/testthat/test-pipeline-live.R</code> with LIVE network tests.</p>
 <div class="section level3">
@@ -61,9 +100,58 @@
 </ol></div>
 <div class="section level3">
 <h3 id="running-tests">Running Tests:<a class="anchor" aria-label="anchor" href="#running-tests"></a></h3>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span>filter <span class="op">=</span> <span class="st">"pipeline-live"</span><span class="op">)</span></span></code></pre></div>
 <p>See <code>state-schooldata/CLAUDE.md</code> for complete testing framework documentation.</p>
+<hr></div>
+</div>
+<div class="section level2">
+<h2 id="idaho-sde-data-sources-verified-january-2026">Idaho SDE Data Sources (Verified January 2026)<a class="anchor" aria-label="anchor" href="#idaho-sde-data-sources-verified-january-2026"></a></h2>
+<div class="section level3">
+<h3 id="primary-enrollment-data-url">Primary Enrollment Data URL<a class="anchor" aria-label="anchor" href="#primary-enrollment-data-url"></a></h3>
+<p><strong>Historical Enrollment by District/Charter</strong> (WORKING) - URL: <code>https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-District-or-Charter.xlsx</code> - Size: ~500KB - Format: Excel (xlsx) - Years: 1995-1996 through 2025-2026 - Contents: District/charter enrollment by grade level - Structure: - Skip 4 header rows - Column 1 (<code>#</code>): District ID number - Column 2 (<code>School District or Charter School</code>): Entity name (fill-down format) - Column 3 (<code>Year</code>): School year in format “YYYY-YYYY” (e.g., “2024-2025”) - Column 4 (<code>Membership</code>): Total enrollment - Columns 5-18: Grade-level enrollment (Preschool, K, 1st-12th)</p>
+</div>
+<div class="section level3">
+<h3 id="additional-data-files-working">Additional Data Files (WORKING)<a class="anchor" aria-label="anchor" href="#additional-data-files-working"></a></h3>
+<ol style="list-style-type: decimal"><li>
+<strong>Historical Enrollment by Building</strong>
+<ul><li>URL: <code>https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-Enrollment-by-Building-1.xlsx</code>
+</li>
+<li>Size: ~6MB</li>
+<li>Building-level enrollment data</li>
+</ul></li>
+<li>
+<strong>Current Enrollment by District/Charter</strong>
+<ul><li>URL: <code>https://www.sde.idaho.gov/wp-content/uploads/2025/12/Enrollment-by-District-and-Charter-School.xlsx</code>
+</li>
+<li>Latest year only</li>
+</ul></li>
+<li>
+<strong>Historical State Enrollment by Grade</strong>
+<ul><li>URL: <code>https://www.sde.idaho.gov/wp-content/uploads/2025/12/Historical-State-Enrollment-by-Grade.xlsx</code>
+</li>
+<li>Statewide totals by grade</li>
+</ul></li>
+</ol></div>
+<div class="section level3">
+<h3 id="known-broken-urls-404-as-of-january-2026">Known Broken URLs (404 as of January 2026)<a class="anchor" aria-label="anchor" href="#known-broken-urls-404-as-of-january-2026"></a></h3>
+<p>The following old URL patterns no longer work: - <code>https://www.sde.idaho.gov/finance/files/attendance-enrollment/historical/*</code> - <code>https://www.sde.idaho.gov/finance/files/attendance-enrollment/enrollment/*</code></p>
+</div>
+<div class="section level3">
+<h3 id="where-to-find-updated-urls">Where to Find Updated URLs<a class="anchor" aria-label="anchor" href="#where-to-find-updated-urls"></a></h3>
+<p>If URLs break again, check: 1. Finance portal: <a href="https://www.sde.idaho.gov/finance/" class="external-link uri">https://www.sde.idaho.gov/finance/</a> 2. Look for “Attendance and Enrollment” section 3. Files are now in <code>/wp-content/uploads/YYYY/MM/</code> format</p>
+</div>
+<div class="section level3">
+<h3 id="data-characteristics">Data Characteristics<a class="anchor" aria-label="anchor" href="#data-characteristics"></a></h3>
+<ul><li>Year format: “YYYY-YYYY” (e.g., “2024-2025”)</li>
+<li>Fill-down format: District names only appear on first row per entity</li>
+<li>State totals: First block of rows contains “STATE OF IDAHO - TOTALS”</li>
+<li>~190+ districts/charters per year</li>
+<li>Total state enrollment: ~310,000-320,000 students</li>
+</ul></div>
+<div class="section level3">
+<h3 id="demographics">Demographics<a class="anchor" aria-label="anchor" href="#demographics"></a></h3>
+<p>Race/ethnicity data is NOT included in the main enrollment file. Available through: - Idaho Report Card: <a href="https://idahoreportcard.org/" class="external-link uri">https://idahoreportcard.org/</a></p>
 </div>
 </div>
 </div>

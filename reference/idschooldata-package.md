@@ -71,6 +71,8 @@ Idaho enrollment data has evolved over time:
 
 Useful links:
 
+- <https://almartin82.github.io/idschooldata>
+
 - <https://github.com/almartin82/idschooldata>
 
 - Report bugs at <https://github.com/almartin82/idschooldata/issues>

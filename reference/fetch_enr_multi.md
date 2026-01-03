@@ -34,8 +34,8 @@ if (FALSE) { # \dontrun{
 enr_multi <- fetch_enr_multi(2022:2024)
 
 # Track enrollment trends
-enr_multi %>%
-  dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+enr_multi |>
+  dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
   dplyr::select(end_year, n_students)
 } # }
 ```
