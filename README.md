@@ -7,167 +7,24 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-**[Documentation](https://almartin82.github.io/idschooldata/)** | **[Getting Started](https://almartin82.github.io/idschooldata/articles/quickstart.html)**
+**[Documentation](https://almartin82.github.io/idschooldata/)** | **[Getting Started](https://almartin82.github.io/idschooldata/articles/quickstart.html)** | **[Enrollment Trends](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html)**
 
 Fetch and analyze Idaho school enrollment data from the Idaho State Department of Education in R or Python.
 
 ## What can you find with idschooldata?
 
-**24 years of enrollment data (2002-2025).** 340,000 students today. Over 115 districts. Here are ten stories hiding in the numbers:
+**24 years of enrollment data (2002-2025).** 340,000 students today. Over 115 districts. Here are ten stories hiding in the numbers - see the [Enrollment Trends vignette](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html) for interactive visualizations:
 
----
-
-### 1. Idaho is the fastest-growing state for schools
-
-Idaho added 70,000 students since 2010, a 25% increase. Tech workers fleeing California and families seeking affordability are reshaping the state.
-
-```r
-library(idschooldata)
-library(dplyr)
-
-enr <- fetch_enr_multi(2010:2025)
-
-enr %>%
-  filter(is_state, grade_level == "TOTAL", subgroup == "total_enrollment") %>%
-  select(end_year, n_students) %>%
-  mutate(growth = n_students - first(n_students))
-```
-
-![Idaho growth](man/figures/enrollment-growth.png)
-
----
-
-### 2. West Ada (Meridian) is Idaho's school giant
-
-West Ada School District in suburban Boise serves over 40,000 students, more than double any other district. It grows by 1,000+ students per year.
-
-```r
-enr_2025 <- fetch_enr(2025)
-
-enr_2025 %>%
-  filter(is_district, grade_level == "TOTAL", subgroup == "total_enrollment") %>%
-  arrange(desc(n_students)) %>%
-  select(district_name, n_students) %>%
-  head(5)
-```
-
-Boise, West Ada, and Nampa together serve nearly half of Idaho's students.
-
----
-
-### 3. The Hispanic surge continues
-
-Hispanic students went from 12% to 20% of enrollment since 2005. The Treasure Valley and Magic Valley regions are transforming.
-
-```r
-enr %>%
-  filter(is_state, grade_level == "TOTAL", subgroup == "hispanic") %>%
-  select(end_year, n_students, pct)
-```
-
-![Hispanic growth](man/figures/hispanic-growth.png)
-
-Twin Falls and Caldwell school districts are now over 40% Hispanic.
-
----
-
-### 4. COVID barely slowed Idaho's growth
-
-While most states lost students during COVID, Idaho's enrollment dipped only briefly before resuming growth. Families moved to Idaho during the pandemic.
-
-```r
-enr %>%
-  filter(is_state, grade_level == "TOTAL", subgroup == "total_enrollment",
-         end_year %in% 2019:2025) %>%
-  select(end_year, n_students) %>%
-  mutate(change = n_students - lag(n_students))
-```
-
----
-
-### 5. Kindergarten enrollment hit record highs
-
-Idaho's kindergarten class keeps growing, unlike most states where it's shrinking. Young families are moving in faster than they're moving out.
-
-```r
-enr %>%
-  filter(is_state, subgroup == "total_enrollment", grade_level == "K") %>%
-  select(end_year, n_students)
-```
-
-![Kindergarten trend](man/figures/kindergarten.png)
-
----
-
-### 6. Charter schools educate 1 in 12 students
-
-Idaho has over 60 charter schools serving 30,000 students. Charter growth has been explosive, especially in the Treasure Valley.
-
-```r
-enr_2025 %>%
-  filter(grepl("Charter|Academy", district_name, ignore.case = TRUE),
-         grade_level == "TOTAL", subgroup == "total_enrollment") %>%
-  summarize(total_charter = sum(n_students, na.rm = TRUE))
-```
-
----
-
-### 7. Rural Idaho is emptying out
-
-While Boise suburbs boom, northern and eastern Idaho districts are shrinking. Wallace, Salmon, and Challis have half the students they had 20 years ago.
-
-```r
-enr %>%
-  filter(district_name %in% c("Wallace Jt District", "Salmon School District",
-                              "Challis Jt School District"),
-         is_district, grade_level == "TOTAL", subgroup == "total_enrollment") %>%
-  select(end_year, district_name, n_students)
-```
-
----
-
-### 8. 90% white, but changing
-
-Idaho remains one of the whitest states, but diversity is increasing. Asian and multiracial student populations are growing fastest.
-
-```r
-enr_2025 %>%
-  filter(is_state, grade_level == "TOTAL",
-         subgroup %in% c("white", "hispanic", "asian", "multiracial")) %>%
-  select(subgroup, n_students, pct) %>%
-  arrange(desc(pct))
-```
-
----
-
-### 9. The Treasure Valley is building schools constantly
-
-Eagle, Kuna, and Star are among the fastest-growing areas in America. New schools open every year, and they fill up immediately.
-
-```r
-enr %>%
-  filter(district_name %in% c("West Ada District", "Kuna Jt District",
-                              "Middleton School District"),
-         is_district, grade_level == "TOTAL", subgroup == "total_enrollment") %>%
-  select(end_year, district_name, n_students) %>%
-  tidyr::pivot_wider(names_from = district_name, values_from = n_students)
-```
-
-![Treasure Valley growth](man/figures/treasure-valley.png)
-
----
-
-### 10. English Learners have doubled
-
-Idaho's ELL population grew from 15,000 to 30,000 students since 2010. Agricultural communities and refugee resettlement drive this growth.
-
-```r
-enr %>%
-  filter(is_state, grade_level == "TOTAL", subgroup == "lep") %>%
-  select(end_year, n_students, pct)
-```
-
----
+1. [Idaho is the fastest-growing state for schools](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#idaho-is-the-fastest-growing-state-for-schools) - Added 70,000 students since 2010
+2. [West Ada (Meridian) is Idaho's school giant](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#west-ada-meridian-is-idahos-school-giant) - Over 40,000 students, growing 1,000+/year
+3. [The Hispanic surge continues](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#the-hispanic-surge-continues) - From 12% to 20% since 2005
+4. [COVID barely slowed Idaho's growth](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#covid-barely-slowed-idahos-growth) - Brief dip before resuming rapid growth
+5. [Kindergarten enrollment hit record highs](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#kindergarten-enrollment-hit-record-highs) - Young families moving in
+6. [Charter schools educate 1 in 12 students](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#charter-schools-educate-1-in-12-students) - 60+ charters serving 30,000 students
+7. [Rural Idaho is emptying out](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#rural-idaho-is-emptying-out) - Wallace, Salmon, Challis shrinking
+8. [90% white, but changing](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#white-but-changing) - Asian and multiracial growing fastest
+9. [The Treasure Valley is building schools constantly](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#the-treasure-valley-is-building-schools-constantly) - West Ada, Kuna, Middleton
+10. [English Learners have doubled](https://almartin82.github.io/idschooldata/articles/enrollment-trends.html#english-learners-have-doubled) - From 15,000 to 30,000 since 2010
 
 ## Installation
 
