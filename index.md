@@ -32,6 +32,10 @@ enr %>%
   mutate(growth = n_students - first(n_students))
 ```
 
+![Idaho growth](reference/figures/enrollment-growth.png)
+
+Idaho growth
+
 ------------------------------------------------------------------------
 
 ### 2. West Ada (Meridian) is Idaho’s school giant
@@ -66,6 +70,10 @@ enr %>%
   select(end_year, n_students, pct)
 ```
 
+![Hispanic growth](reference/figures/hispanic-growth.png)
+
+Hispanic growth
+
 Twin Falls and Caldwell school districts are now over 40% Hispanic.
 
 ------------------------------------------------------------------------
@@ -96,6 +104,10 @@ enr %>%
   filter(is_state, subgroup == "total_enrollment", grade_level == "K") %>%
   select(end_year, n_students)
 ```
+
+![Kindergarten trend](reference/figures/kindergarten.png)
+
+Kindergarten trend
 
 ------------------------------------------------------------------------
 
@@ -157,6 +169,10 @@ enr %>%
   select(end_year, district_name, n_students) %>%
   tidyr::pivot_wider(names_from = district_name, values_from = n_students)
 ```
+
+![Treasure Valley growth](reference/figures/treasure-valley.png)
+
+Treasure Valley growth
 
 ------------------------------------------------------------------------
 
