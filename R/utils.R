@@ -89,7 +89,7 @@ get_year_label <- function(end_year) {
 #' @return A list with components:
 #'   \describe{
 #'     \item{min_year}{Earliest available year (2002)}
-#'     \item{max_year}{Most recent available year (2025)}
+#'     \item{max_year}{Most recent available year (2024)}
 #'     \item{description}{Human-readable description of the date range}
 #'   }
 #' @export
@@ -98,7 +98,7 @@ get_year_label <- function(end_year) {
 get_available_years <- function() {
   list(
     min_year = 2002,
-    max_year = 2025,
-    description = "Idaho enrollment data is available from 2002 to 2025"
+    max_year = 2024,
+    description = "Idaho enrollment data is available from 2002 to 2024"
   )
 }
